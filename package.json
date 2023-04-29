@@ -1,0 +1,47 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "deploy": "hardhat run scripts/genContract.ts && hardhat run --network ${NETWORK} scripts/deploy.ts"
+  },
+  "dependencies": {
+    "@coinbase/wallet-sdk": "^3.6.6",
+    "@gnosis.pm/safe-apps-provider": "^0.15.1",
+    "@gnosis.pm/safe-apps-sdk": "^7.8.0",
+    "@noir-lang/aztec_backend": "0.1.0-0c3b2f2",
+    "@noir-lang/barretenberg": "github:noir-lang/barretenberg#39a1547875f941ef6640217a42d8f34972425c97",
+    "@noir-lang/noir_wasm": "0.3.2-fa0e9cff",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.2.2",
+    "@nuxtjs/color-mode": "^3.2.0",
+    "@nuxtjs/tailwindcss": "^6.6.7",
+    "@phosphor-icons/vue": "^2.0.1",
+    "@pinia/nuxt": "^0.4.9",
+    "@walletconnect/web3-provider": "^1.8.0",
+    "assert": "^2.0.0",
+    "daisyui": "^2.51.6",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
+    "https-browserify": "^1.0.0",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "os-browserify": "^0.3.0",
+    "pinia": "^2.0.35",
+    "stream-http": "^3.2.0",
+    "tailwindcss-aspect-ratio": "^3.0.0",
+    "url": "^0.11.0",
+    "vue-dapp": "^0.7.2",
+    "vue-demi": "^0.14.0"
+  },
+  "devDependencies": {
+    "@noir-lang/noir-source-resolver": "1.1.1",
+    "@nuxt/webpack-builder": "^3.4.3",
+    "@types/node": "^18",
+    "nuxt": "^3.4.2"
+  }
+}
