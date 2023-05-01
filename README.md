@@ -42,3 +42,4 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 ```bash
 npx ts-node -r esm scripts/genContract.ts
 ```
+# noir-starter-nuxt-webpack
