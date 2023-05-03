@@ -3,6 +3,7 @@
 .env
 .tmp
 .nuxt
+.output
 # dependencies
 /node_modules
 /.pnp

@@ -7,7 +7,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "hardhat run scripts/genContract.ts && hardhat run --network ${NETWORK} scripts/deploy.ts"
+    "deploy": "hardhat run --network sepolia scripts/deploy.ts"
   },
   "dependencies": {
     "@coinbase/wallet-sdk": "^3.6.6",

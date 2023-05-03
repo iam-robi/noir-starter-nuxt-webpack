@@ -1,33 +1,12 @@
 <template>
   <div class="flex flex-col h-screen z-10">
-    <div class="p-4 @lex gap-4">
-      <button @click="onConnect" class="btn">Connect</button>
-      {{ wallet.wallet.status }} - {{ address }}
-      <vd-board :connectors="connectors" dark>
-        <!-- <template #loading>
-          <div v-if="wallet.wallet.status === 'loading'">loading...</div>
-        </template> -->
-      </vd-board>
-
-      <select class="select w-full max-w-xs" v-model="colorMode.preference">
-        <option disabled selected>Theme</option>
-        <option v-for="theme of themes" :key="theme">{{ theme }}</option>
-      </select>
-    </div>
-    <div class="hero bg-base-200 py-10">
-      <div class="hero-content text-center">
-        <div class="max-w-md">
-          <h1 class="text-5xl font-bold">Hello Noir !</h1>
-          <p class="py-6">Simple starter template for a Noir UI</p>
-        </div>
-      </div>
-    </div>
-
+    <Navbar></Navbar>
+    <LayoutHeroBanner></LayoutHeroBanner>
     <div class="flex justify-center items-center">
       <div class="w-full max-w-md p-10 card rounded-box">
         <!-- Card content goes here -->
         <div class="flex flex-col space-y-4">
-          <label for="input1" class="text-lg font-bold">Input X:</label>
+          <label for="input1" class="text-lg font-bold">Input X: </label>
           <input
             id="input1"
             type="text"
@@ -43,121 +22,92 @@
             placeholder="Enter input Y"
           />
           <button @click="executeProcedure" class="btn">Execute</button>
+          <div>Proof (random string for now) {{ proof }}</div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
-const colorMode = useColorMode();
-const themes = [
-  "system",
-  "light",
-  "dark",
-  "cupcake",
-  "bumblebee",
-  "emerald",
-  "corporate",
-  "synthwave",
-  "retro",
-  "cyberpunk",
-  "valentine",
-  "halloween",
-  "garden",
-  "forest",
-  "aqua",
-  "lofi",
-  "pastel",
-  "fantasy",
-  "wireframe",
-  "black",
-  "luxury",
-  "dracula",
-  "cmyk",
-  "autumn",
-  "business",
-  "acid",
-  "lemonade",
-  "night",
-  "coffee",
-  "winter",
-];
+import Navbar from "./components/layout/Navbar.vue";
+import LayoutHeroBanner from "./components/layout/HeroBanner.vue";
+import initNoirWasm, { compile } from "@noir-lang/noir_wasm";
+import initialiseAztecBackend from "@noir-lang/aztec_backend";
 
-import { PhSignature, PhFileSearch } from "@phosphor-icons/vue";
-import {
-  MetaMaskConnector,
-  WalletConnectConnector,
-  CoinbaseWalletConnector,
-  useBoard,
-  useEthers,
-  useWallet,
-} from "vue-dapp";
+import { initialiseResolver } from "@noir-lang/noir-source-resolver";
 
-const wallet = useWallet();
-const board = useBoard();
-const { address, chainId, signer } = useEthers();
+let worker: Worker | null = null;
+const proof = ref(null);
 
-// board.open();
-const onConnect = function () {
-  console.log("connect");
-  board.open();
+const initializeProofWorker = () => {
+  worker = new Worker(new URL("/assets/workers/prover.ts", import.meta.url), {
+    type: "module",
+  });
+
+  worker.addEventListener("message", (event) => {
+    proof.value = event.data;
+  });
+
+  worker.postMessage("generate");
 };
 
-const connectors = [
-  new MetaMaskConnector({
-    appUrl: "http://localhost:3000",
-  }),
-  new WalletConnectConnector({
-    qrcode: true,
-    rpc: {
-      1: `https://eth.llamarpc.com`,
-      5: `https://eth-goerli.g.alchemy.com/v2/mb4872MrLwfUdJfLcYfkXKhvsZo3PJsh`,
+onBeforeUnmount(() => {
+  if (worker) {
+    worker.terminate();
+  }
+});
+const fetchData = async () => {
+  // Use the randomID.value in your application logic
+  console.log("fetchData", proof.value);
+};
+
+// ...
+const { data, error } = useAsyncData("fetch-data", fetchData, {
+  lazy: true,
+  watch: [proof],
+  immediate: false,
+});
+// ...
+
+const executeProcedure = async function () {
+  await initNoirWasm();
+  let files;
+  await $fetch("/api/listdirectory", {
+    method: "POST",
+  }).then((res) => {
+    files = res;
+  });
+  console.log("files", files);
+
+  let compiled_noir;
+  const code = await $fetch("/api/readcircuitfile", {
+    method: "POST",
+    body: {
+      filename: "main.nr",
     },
-  }),
-  new CoinbaseWalletConnector({
-    appName: "Vue Dapp",
-    jsonRpcUrl: `https://eth-goerli.g.alchemy.com/v2/mb4872MrLwfUdJfLcYfkXKhvsZo3PJsh`,
-  }),
-  // new SafeConnector(),
-];
+  });
 
-// import initNoirWasm, {
-//   acir_from_bytes,
-//   acir_read_bytes,
-// } from "@noir-lang/noir_wasm";
-// import initBackend, * as aztec_backend from "@noir-lang/aztec_backend";
-// import {
-//   create_proof,
-//   verify_proof,
-//   setup_generic_prover_and_verifier,
-//   BarretenbergWasm,
-// } from "@noir-lang/barretenberg";
+  initialiseResolver((id: any) => {
+    return code;
+  });
 
-// let inputs = {
-//   x: 3,
-//   y: 4,
-// };
-// const PROOF_TO_FILES = {
-//   connectivity: "connectivityAcir.buf",
-// };
+  let circuit, abi;
+  try {
+    const compiled_noir = compile({});
+    console.log("compiled_noir", compiled_noir);
+    circuit = compiled_noir.circuit;
+    abi = compiled_noir.abi;
+    //return compiled_noir;
+  } catch (e) {
+    console.log("Error while compiling:", e);
+  }
 
-// export type ConnectivityABI = {
-//   x: number;
-//   y: number;
-// };
+  console.log("circuit", circuit);
 
-// type Proof = "connectivity";
-// const executeProcedure = async function () {
-//   await initNoirWasm();
-//   //const acir = await getAcir();
-//   const res = await fetch("connectivityAcir.buf");
-//   const buffer = await res.arrayBuffer();
-//   const bytes = new Uint8Array(buffer);
-//   console.log(bytes);
-//   const acir = acir_read_bytes(bytes);
-//   // // const acir = acir_read_bytes(bytes);
-//   // // console.log(acir);
-//   // console.log("executeProcedure");
-//   //board.open();
-// };
+  //TODO: see why it's failing
+  //await initialiseAztecBackend();
+
+  initializeProofWorker();
+};
 </script>
